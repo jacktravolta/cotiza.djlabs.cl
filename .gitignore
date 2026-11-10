@@ -1,0 +1,17 @@
+# Credenciales: nunca se versionan.
+# Si el deploy genera un config.php con el token de servicio de cotizaIA en
+# este folder, no puede entrar al repo. Copiar config.example.php en su lugar.
+config.php
+
+# Sistema operativo / editores
+.DS_Store
+Thumbs.db
+*.swp
+*~
+.idea/
+.vscode/
+
+# Dependencias y artefactos locales
+node_modules/
+__pycache__/
+*.py[cod]

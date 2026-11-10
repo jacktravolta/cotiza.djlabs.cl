@@ -1,0 +1,20 @@
+# cotiza.djlabs.cl — front estatico (sitio público).
+#
+# Este folder es el document root de su propio dominio y NO tiene PHP: el
+# navegador habla directo con la API (POST /cotizaia/cotizacion/publica, sin
+# token) y el resultado se pinta en la misma pagina. No hay secretos que
+# proteger: este front no guarda ni pide credenciales.
+
+Options -Indexes
+
+# El front tiene paginas reales (index.html, app.html, contrasena.html,
+# verificar.html). La portada es index.html.
+DirectoryIndex index.html
+
+<IfModule mod_headers.c>
+    # El front no carga recursos de terceros salvo el CSS del CDN de
+    # Tailwind y los scripts de la plataforma: no hay necesidad de abrir
+    # la politica de frames a cualquier origen.
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+</IfModule>

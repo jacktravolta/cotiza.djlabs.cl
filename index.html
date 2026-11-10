@@ -1,0 +1,1615 @@
+<!doctype html>
+<html lang="es" data-tema="dia" data-skin="ambar">
+<head>
+  <meta charset="utf-8">
+  <title>Pide tu cotización | Carrocerías A. Rodríguez</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Cuéntanos qué necesitas construir o reparar y te enviamos una cotización en PDF a tu correo, con los precios de nuestra lista vigente. Sin registro y sin costo.">
+  <script>
+    // No-flash theme boot: apply the visitor's stored tema before any
+    // stylesheet paints. The heart's administered defaults (REST
+    // /ui/theme?heart=) only fill what the visitor never chose;
+    // /js/theme.js then wires the on-screen controls.
+    (function () {
+      try {
+        // root = the ELEMENT (documentElement.dataset here would be the
+        // DOMStringMap itself, and root.dataset.* inside it would write a
+        // bogus data-dataset-* attribute — the reload-reverts-to-default
+        // bug). The heart's administered theme applies after this script
+        // (REST /ui/theme), solo si el visitante no eligió.
+        var root = document.documentElement;
+        var tema = localStorage.getItem('aj:tema');
+        if (tema === 'dia' || tema === 'noche') root.dataset.tema = tema;
+      } catch (error) { /* storage unavailable: markup defaults apply */ }
+    })();
+  </script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="js/tailwind.config.js"></script>
+  <link rel="stylesheet" href="css/tokens.css" />
+  <link rel="stylesheet" href="css/cotizaia.css" />
+  <!-- Per-heart site defaults (Writer A's endpoint): applies this heart's
+       stored site_skin/site_tema ONLY when the visitor has no preference. -->
+  <script type="module" src="js/theme.js"></script>
+  <!-- Front público de pagos (los packs son visibles para cualquiera; el pago
+       pide cuenta en un modal). Vive en su propio módulo para que la landing
+       funcione aunque el script principal no cargue. -->
+  <script src="api-config.js"></script>
+  <script>
+    // API(path): backend endpoints. En 2-servidores apunta al API origin
+    // (api-config.js); con '' el default same-origin.
+    window.API = (function () {
+      var base = (typeof window.__API_BASE__ === 'string')
+        ? window.__API_BASE__.trim().replace(/\/+$/, '')
+        : '';
+      return function (path) { return base + path; };
+    })();
+  </script>
+  <script type="module" src="js/checkout.js?v=1"></script>
+  <style>
+    /* Scan-first animations (defined here because the Tailwind Play CDN
+       does not ship these keyframes; same pattern as app.html's fallbacks). */
+    @keyframes ld-scan-sweep { 0% { transform: translateX(-130%); } 100% { transform: translateX(340%); } }
+    @keyframes ld-scan-flash { 0% { transform: translateX(-115%); opacity: 0.9; } 100% { transform: translateX(115%); opacity: 0.9; } }
+    @keyframes ld-glow-border {
+      0%, 100% { box-shadow: 0 0 0 0 rgb(var(--c-accent) / 0.30), 0 10px 34px -14px rgb(var(--c-accent) / 0.45); }
+      50% { box-shadow: 0 0 0 7px rgb(var(--c-accent) / 0.10), 0 10px 34px -14px rgb(var(--c-accent) / 0.60); }
+    }
+    @keyframes ld-modal-in { from { opacity: 0; transform: translateY(16px) scale(0.95); } to { opacity: 1; transform: none; } }
+    @keyframes ld-backdrop-in { from { opacity: 0; } to { opacity: 1; } }
+    .scan-beam { animation: ld-scan-sweep 2.8s cubic-bezier(0.4, 0, 0.2, 1) infinite; }
+    .scan-glow { animation: ld-glow-border 2.8s ease-in-out infinite; }
+    .scan-flash-run { animation: ld-scan-flash 0.65s ease-in-out both; }
+    .ld-modal-card { animation: ld-modal-in 0.3s cubic-bezier(0.2, 0.8, 0.3, 1.12) both; }
+    .ld-modal-backdrop { animation: ld-backdrop-in 0.2s ease-out both; }
+    /* Scroll reveal (Cómo funciona + Qué ofrece): cards fade in + rise as
+       they enter the viewport, staggered left to right. The hidden state is
+       only armed by JS (reveal-ready class), so without JS everything stays
+       visible. */
+    .reveal-ready [data-reveal] {
+      opacity: 0;
+      transform: translateY(24px);
+      transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+      transition-delay: var(--reveal-delay, 0ms);
+    }
+    .reveal-ready [data-reveal].is-visible {
+      opacity: 1;
+      transform: none;
+    }
+    /* The HTML hidden attribute loses against Tailwind display utilities
+       (same specificity; utilities ship later in the stylesheet), leaking
+       the session-aware "Empieza hoy" copy. Enforce its standard meaning. */
+    [hidden] { display: none !important; }
+    @media (prefers-reduced-motion: reduce) {
+      .scan-beam, .scan-glow, .scan-flash-run, .ld-modal-card, .ld-modal-backdrop { animation: none; }
+      .reveal-ready [data-reveal] { opacity: 1; transform: none; transition: none; }
+    }
+  </style>
+</head>
+<body class="min-h-screen bg-[rgb(var(--c-bg))] font-sans text-[rgb(var(--c-text))] antialiased">
+
+  <!-- ============================== HEADER ============================== -->
+  <header class="sticky top-0 z-40 border-b border-slate-200 bg-[rgb(var(--c-bg))]/75 backdrop-blur-md">
+    <div class="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3">
+      <a href="#" class="flex min-w-0 items-center gap-2.5">
+        <span class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-brand-600 text-white shadow-sm" aria-hidden="true">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 17l6-6 4 4 7-7" />
+            <path d="M14 8h6v6" />
+          </svg>
+        </span>
+        <span class="truncate font-display text-lg font-semibold tracking-tight">CotizaIA</span>
+      </a>
+      <nav class="hidden items-center gap-1 text-sm font-medium text-slate-600 md:flex" aria-label="Secciones">
+        <a href="#como-funciona" class="rounded-full px-3.5 py-1.5 transition hover:bg-brand-50 hover:text-brand-700">Cómo funciona</a>
+        <a href="#que-ofrece" class="rounded-full px-3.5 py-1.5 transition hover:bg-brand-50 hover:text-brand-700">Qué ofrece</a>
+        <a href="#cotizar" class="rounded-full px-3.5 py-1.5 transition hover:bg-brand-50 hover:text-brand-700">Pedir cotización</a>
+        <a href="#contacto" class="rounded-full px-3.5 py-1.5 transition hover:bg-brand-50 hover:text-brand-700">Contáctanos</a>
+      </nav>
+      <div class="flex items-center gap-2">
+        <!-- Visitor look control: day/night only. The accent colour is
+             admin-configured per heart and applied site-wide via
+             el endpoint REST /ui/theme. -->
+        <button type="button" data-theme-toggle aria-label="Cambiar tema" title="Cambiar tema"
+                class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-300 bg-white text-slate-700 transition hover:border-brand-400 hover:text-brand-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-300">
+          <svg class="icon-sun h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2m0 14v2M5.6 5.6l1.4 1.4m10 10l1.4 1.4M3 12h2m14 0h2M5.6 18.4l1.4-1.4m10-10l1.4-1.4M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+          <svg class="icon-moon h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M21 12.8A8.5 8.5 0 1111.2 3a6.6 6.6 0 009.8 9.8z"/></svg>
+        </button>
+        <!-- Auth entries swap with the visitor's session state: when
+             /auth/me reports a session the JS below hides these links and
+             reveals #btn-enter-panel instead (owner, 2026-10-22). -->
+        <a href="#login" data-auth-links class="rounded-full px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-brand-50 hover:text-brand-700">Iniciar sesión</a>
+        <a href="#registro" data-auth-links class="rounded-full bg-brand-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-300">Crear cuenta</a>
+        <button id="btn-enter-panel" type="button" hidden
+                class="rounded-full bg-brand-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-300">Entrar al panel</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <!-- ============================== HERO ============================== -->
+    <section class="mx-auto max-w-4xl px-4 pb-8 pt-12 sm:pt-16">
+      <p class="inline-flex items-center gap-2 rounded-full border border-brand-200 bg-brand-50 px-3 py-1 text-xs font-semibold text-brand-700">
+        Cotización automática · Sin registro · Sin costo para ti
+      </p>
+      <h1 class="mx-auto mt-4 max-w-2xl text-center font-display text-4xl font-semibold leading-tight tracking-tight sm:text-5xl">
+        Cuéntanos tu proyecto y <span class="text-brand-700">te cotizamos</span>
+      </h1>
+      <p class="mx-auto mt-4 max-w-2xl text-center text-lg leading-relaxed text-slate-600">
+        Describe lo que necesitas construir o reparar. Lo contrastamos con nuestra lista de
+        productos y te enviamos una cotización en PDF a tu correo, con el detalle, el total y
+        la fecha de vigencia.
+      </p>
+      <div class="mt-7 flex flex-wrap items-center justify-center gap-3">
+        <a href="#cotizar" class="rounded-xl bg-brand-600 px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-300">Pedir cotización</a>
+        <a href="#como-funciona" class="rounded-xl border border-slate-200 bg-white px-6 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:text-slate-900">Ver cómo funciona</a>
+      </div>
+    </section>
+
+    <!-- ============================== COTIZAR ============================== -->
+
+    <section id="cotizar" class="mx-auto max-w-4xl px-4 pt-6 pb-16">
+      <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+        <!-- Formulario de cotizacion: lo maneja el navegador (js/cotizaia.js)
+             contra el endpoint PUBLICO de la API. Sin action: el front es
+             estatico y no hay PHP detras. -->
+        <form id="cotizaia-form" method="post" novalidate>
+          <input type="hidden" name="idempotency_key" id="cotizaia-clave" value="">
+
+          <label for="consulta" class="block font-medium">Tu proyecto</label>
+          <p class="mt-1 text-sm text-slate-600">
+            Qué necesitas construir o reparar, para qué tipo de vehículo o estructura y, si las
+            tienes a mano, las medidas aproximadas.
+          </p>
+          <textarea id="consulta" name="consulta" rows="6" minlength="10" maxlength="4000" required
+                    placeholder="Ej: Necesito una baranda minera para un camión 4x2, con travesaños y plancha de fierro de 3 mm."
+                    class="mt-3 block w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-slate-900 shadow-sm transition placeholder:text-slate-400 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-200"></textarea>
+          <p class="mt-2 text-xs text-slate-600">
+            Entre 10 y 4000 caracteres. Con las medidas aproximadas basta: la ajustamos contigo.
+          </p>
+
+          <label for="email" class="mt-6 block font-medium">Tu correo</label>
+          <p class="mt-1 text-sm text-slate-600">
+            Es el único dato que te pedimos, y lo usamos solo para enviarte la cotización.
+          </p>
+          <input type="email" id="email" name="email" required autocomplete="email"
+                 placeholder="tucorreo@ejemplo.cl"
+                 class="mt-3 block w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-slate-900 shadow-sm transition placeholder:text-slate-400 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-200">
+
+          <div id="cotizaia-aviso" class="cotizaia-aviso" hidden role="alert"></div>
+
+          <div class="mt-6 flex flex-wrap items-center gap-3">
+            <button type="submit" id="cotizaia-enviar"
+                    class="rounded-xl bg-brand-600 px-6 py-3 font-semibold text-white shadow-sm transition hover:bg-brand-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-300 disabled:cursor-not-allowed disabled:opacity-60">
+              Pedir cotización
+            </button>
+            <p class="text-sm text-slate-600">
+              Tarda hasta un minuto. Si algo falla, lo reintentas sin problema.
+            </p>
+          </div>
+        </form>
+
+        <!-- Sin JavaScript no hay cotizacion en linea, y no pasa nada: el
+             visitante tiene el formulario de contacto y el correo de la
+             empresa a mano. -->
+        <noscript>
+          <div class="mt-6 rounded-2xl border border-brand-200 bg-brand-50 px-4 py-3 text-sm leading-relaxed text-brand-800">
+            <p class="font-semibold">La cotización en línea necesita JavaScript.</p>
+            <p class="mt-1">
+              Tu navegador lo tiene apagado y no hay problema: escríbenos y te cotizamos a mano,
+              con el mismo detalle y el mismo PDF. Usa el
+              <a href="#contacto" class="font-medium underline underline-offset-2">formulario de contacto</a>
+              de esta página o escribe a
+              <a href="mailto:contacto@arodriguez.cl" class="font-medium underline underline-offset-2">contacto@arodriguez.cl</a>.
+            </p>
+          </div>
+        </noscript>
+
+        <!-- La cotizacion se pinta aqui (js/cotizaia.js). Nace oculto: sin
+             cotizacion no hay nada que mostrar. -->
+        <div id="cotizaia-resultado" hidden
+             class="mt-8 rounded-2xl border border-brand-200 bg-[rgb(var(--c-bg))] p-6 shadow-sm sm:p-8">
+          <p id="cotizaia-folio" class="text-sm font-semibold uppercase tracking-wide text-brand-700"></p>
+          <h3 class="mt-2 font-display text-2xl font-semibold">Tu cotización está lista</h3>
+          <p id="cotizaia-mensaje" class="mt-3 text-sm leading-relaxed text-slate-600"></p>
+
+          <div class="mt-6 overflow-x-auto">
+            <table class="w-full text-sm">
+              <thead>
+                <tr class="border-b border-slate-200 text-left text-slate-600">
+                  <th scope="col" class="py-2 pr-4 font-medium">Producto</th>
+                  <th scope="col" class="py-2 pr-4 text-right font-medium">Cantidad</th>
+                  <th scope="col" class="py-2 pr-4 text-right font-medium">Unitario</th>
+                  <th scope="col" class="py-2 text-right font-medium">Subtotal</th>
+                </tr>
+              </thead>
+              <tbody id="cotizaia-lineas"></tbody>
+              <tfoot>
+                <tr>
+                  <td colspan="3" class="py-3 text-right font-medium">Total</td>
+                  <td id="cotizaia-total" class="py-3 text-right font-display text-lg font-semibold"></td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+
+          <p id="cotizaia-observaciones" hidden
+             class="mt-4 rounded-xl bg-slate-50 px-4 py-3 text-sm leading-relaxed text-slate-600"></p>
+          <p id="cotizaia-vigencia" hidden class="mt-4 text-sm leading-relaxed text-slate-600"></p>
+
+          <div class="mt-6 flex flex-wrap items-center gap-3">
+            <a id="cotizaia-descargar" href="#" download="cotizacion.pdf" hidden
+               class="rounded-xl bg-brand-600 px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-300">
+              Descargar el PDF
+            </a>
+            <p class="text-sm text-slate-600">
+              También te la enviamos a tu correo, por si prefieres revisarla con calma.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+    
+
+    
+
+    <!-- ============================== CÓMO FUNCIONA ============================== -->
+    <section id="como-funciona" class="border-y border-slate-200 bg-white">
+      <div class="mx-auto max-w-6xl px-4 py-14">
+        <h2 data-reveal class="font-display text-2xl font-semibold tracking-tight sm:text-3xl">Cómo funciona</h2>
+        <p data-reveal class="mt-2 max-w-2xl text-sm leading-relaxed text-slate-600">Tres pasos, sin registro y sin costo para ti.</p>
+        <ol class="mt-8 grid gap-5 md:grid-cols-3">
+          <li data-reveal class="group rounded-2xl border border-slate-200 bg-[rgb(var(--c-bg))] p-6">
+            <span class="inline-flex h-10 w-10 items-center justify-center rounded-full bg-brand-600 font-display text-base font-bold text-white">1</span>
+                        <div class="mt-4 overflow-hidden rounded-xl">
+                        <img src="img/pro-cf1-escaneo.jpg" alt="Ilustración: revisión de un sitio web en la computadora" class="h-48 w-full object-cover transition-transform duration-300 ease-out group-hover:scale-105 cursor-zoom-in" loading="lazy" decoding="async" width="1200" height="801" />
+                        </div>
+            <h3 class="mt-4 text-base font-semibold">Nos cuentas tu proyecto</h3>
+            <p class="mt-2 text-sm leading-relaxed text-slate-600">Escribes en el formulario qué necesitas construir o reparar, para qué vehículo o estructura y las medidas que tengas a mano. No hace falta que sea perfecto: lo ajustamos preguntando.</p>
+          </li>
+          <li data-reveal class="group rounded-2xl border border-slate-200 bg-[rgb(var(--c-bg))] p-6">
+            <span class="inline-flex h-10 w-10 items-center justify-center rounded-full bg-brand-600 font-display text-base font-bold text-white">2</span>
+                        <div class="mt-4 overflow-hidden rounded-xl">
+                        <img src="img/pro-cf2-detalle.jpg" alt="Ilustración: revisión detallada de documentos" class="h-36 w-full object-cover transition-transform duration-300 ease-out group-hover:scale-105 cursor-zoom-in" loading="lazy" decoding="async" width="1200" height="800" />
+                        </div>
+            <h3 class="mt-4 text-base font-semibold">Lo revisamos contra la lista</h3>
+            <p class="mt-2 text-sm leading-relaxed text-slate-600">Contrastamos tu proyecto con nuestra lista de productos y preparamos los ítems que corresponden, con los precios de venta vigentes.</p>
+          </li>
+          <li data-reveal class="group rounded-2xl border border-slate-200 bg-[rgb(var(--c-bg))] p-6">
+            <span class="inline-flex h-10 w-10 items-center justify-center rounded-full bg-brand-600 font-display text-base font-bold text-white">3</span>
+                        <div class="mt-4 overflow-hidden rounded-xl">
+                        <img src="img/pro-cf3-resultado.jpg" alt="Ilustración: informe con resultados en pantalla" class="h-36 w-full object-cover transition-transform duration-300 ease-out group-hover:scale-105 cursor-zoom-in" loading="lazy" decoding="async" width="1200" height="800" />
+                        </div>
+            <h3 class="mt-4 text-base font-semibold">Te llega la cotización</h3>
+            <p class="mt-2 text-sm leading-relaxed text-slate-600">Recibes un PDF con el detalle por producto, el total y hasta qué día es válida, en tu correo. Y si algo no calza, lo conversamos.</p>
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- ============================== QUÉ OFRECE ============================== -->
+    <section id="que-ofrece" class="mx-auto max-w-4xl px-4 py-14">
+      <h2 data-reveal class="font-display text-2xl font-semibold tracking-tight sm:text-3xl">Qué obtienes</h2>
+      <div class="mt-8 grid gap-5 sm:grid-cols-2">
+        <div data-reveal class="rounded-2xl border border-slate-200 bg-white p-6">
+          <h3 class="text-base font-semibold">Un PDF con el detalle</h3>
+          <p class="mt-2 text-sm leading-relaxed text-slate-600">Producto, cantidad, precio unitario y subtotal, el total de la cotización y la fecha hasta la que es válida.</p>
+        </div>
+        <div data-reveal class="rounded-2xl border border-slate-200 bg-white p-6">
+          <h3 class="text-base font-semibold">Precios de nuestra lista vigente</h3>
+          <p class="mt-2 text-sm leading-relaxed text-slate-600">Los precios salen de la lista que publicamos, no de una estimación. Si el proyecto necesita algo que no está en la lista, te lo cotizamos a medida.</p>
+        </div>
+        <div data-reveal class="rounded-2xl border border-slate-200 bg-white p-6">
+          <h3 class="text-base font-semibold">La posibilidad de ajustarla</h3>
+          <p class="mt-2 text-sm leading-relaxed text-slate-600">Cambiar una cantidad, sumar o quitar un producto, revisar un plazo: lo conversamos y emitimos la cotización que necesitas.</p>
+        </div>
+        <div data-reveal class="rounded-2xl border border-slate-200 bg-white p-6">
+          <h3 class="text-base font-semibold">Una revisión de una persona</h3>
+          <p class="mt-2 text-sm leading-relaxed text-slate-600">La cotización se prepara con asistencia de IA y la revisa alguien de nuestro equipo antes de ser una oferta final. El PDF lo dice, para que no haya sorpresas.</p>
+        </div>
+        <div data-reveal class="rounded-2xl border border-slate-200 bg-white p-6">
+          <h3 class="text-base font-semibold">Asistente y chat con créditos</h3>
+          <p class="mt-2 text-sm leading-relaxed text-slate-600">Con una cuenta puedes conversar con nuestro asistente desde el panel: responde con la lista vigente y consulta tu saldo. Empiezas con 100 créditos de bienvenida y recargas desde $1.000.</p>
+          <div class="mt-4 overflow-hidden rounded-xl">
+            <img src="img/pro-billetera.jpg" alt="Ilustración: pago con tarjeta en terminal" class="h-36 w-full object-cover transition-transform duration-300 ease-out group-hover:scale-105 cursor-zoom-in" loading="lazy" decoding="async" width="1200" height="800" />
+          </div>
+        </div>
+        <div data-reveal class="rounded-2xl border border-slate-200 bg-white p-6">
+          <h3 class="text-base font-semibold">Tus datos, tu decisión</h3>
+          <p class="mt-2 text-sm leading-relaxed text-slate-600">Usamos lo que escribes solo para preparar tu cotización: no lo usamos para publicidad y puedes cerrar tu cuenta cuando quieras, sin rodeos.</p>
+          <button type="button" data-legal-modal="privacidad" class="mt-2 inline-flex items-center gap-1 text-sm font-medium text-brand-700 underline decoration-brand-200 underline-offset-2 transition hover:decoration-brand-500">
+            Cómo protegemos tus datos
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+          </button>
+          <div class="mt-4 overflow-hidden rounded-xl">
+            <img src="img/pro-privacidad.jpg" alt="Ilustración: candado de privacidad" class="h-36 w-full object-cover transition-transform duration-300 ease-out group-hover:scale-105 cursor-zoom-in" loading="lazy" decoding="async" width="1200" height="1800" />
+          </div>
+        </div>
+      </div>
+
+      <h2 data-reveal class="mt-14 font-display text-2xl font-semibold tracking-tight">Un par de verdades</h2>
+      <ul data-reveal class="mt-6 space-y-3 text-slate-600">
+        <li class="flex gap-3">
+          <span class="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-brand-500" aria-hidden="true"></span>
+          <span>Si ninguno de nuestros productos corresponde a lo que necesitas, te lo decimos y lo cotizamos a medida. No te vamos a inventar una cotización.</span>
+        </li>
+        <li class="flex gap-3">
+          <span class="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-brand-500" aria-hidden="true"></span>
+          <span>Usamos lo que escribes solo para preparar tu cotización. No lo usamos para enviarte publicidad.</span>
+        </li>
+        <li class="flex gap-3">
+          <span class="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-brand-500" aria-hidden="true"></span>
+          <span>Pedir una cotización no te compromete a nada y no tiene costo. Si después quieres trabajar con nosotros, conversamos con calma.</span>
+        </li>
+      </ul>
+    </section>
+
+    <!-- ============================== CONTÁCTANOS ============================== -->
+    <!-- Ported from the main landing's #contacto (same /contact contract:
+         honeypot "website" empty, name/email/message). Copy keeps the
+         heart's tone: calm, no blame, no pressure. -->
+    <section id="contacto" class="border-t border-slate-200 bg-white">
+      <div class="mx-auto max-w-6xl px-4 py-14">
+        <div class="grid gap-8 md:grid-cols-2 md:items-start md:gap-10">
+          <div>
+            <h2 class="font-display text-2xl font-semibold tracking-tight sm:text-3xl">Contáctanos</h2>
+            <p class="mt-2 max-w-md text-sm leading-relaxed text-slate-600">
+              Cuéntanos qué necesitas; respondemos con calma y sin tecnicismos.
+            </p>
+            <p class="mt-5 rounded-2xl border border-brand-200 bg-brand-50 px-4 py-3 text-sm leading-relaxed text-brand-800">
+              Este formulario es para dudas sobre el servicio. No reemplaza la asesoría de un profesional y por sí solo no genera ninguna acción judicial.
+            </p>
+            <p class="mt-4 text-xs leading-relaxed text-slate-500">
+              Usamos tu correo solo para responderte. No lo compartimos ni lo usamos para enviarte publicidad.
+            </p>
+          </div>
+
+          <div class="rounded-2xl border border-slate-200 bg-[rgb(var(--c-bg))] p-6 shadow-sm sm:p-8">
+            <form id="contact-form" class="space-y-4" novalidate>
+              <!-- Honeypot: hidden from people, tempting for bots. Must stay empty. -->
+              <div class="hidden" aria-hidden="true" tabindex="-1">
+                <label for="contact-website" class="sr-only">No completar este campo</label>
+                <input id="contact-website" name="website" type="text" tabindex="-1" autocomplete="off" />
+              </div>
+
+              <div>
+                <label for="contact-name" class="block text-sm font-medium text-slate-700">Nombre</label>
+                <input id="contact-name" name="name" type="text" maxlength="255" autocomplete="name" placeholder="¿Cómo te llamas?"
+                       class="mt-1.5 h-11 w-full rounded-xl border border-slate-200 bg-white px-3.5 text-sm shadow-sm transition placeholder:text-slate-400 focus:border-brand-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-300" />
+                <p id="contact-name-error" class="hidden text-xs leading-relaxed text-rose-700"></p>
+              </div>
+
+              <div>
+                <label for="contact-email" class="block text-sm font-medium text-slate-700">Correo electrónico</label>
+                <input id="contact-email" name="email" type="email" maxlength="255" autocomplete="email" placeholder="tu@correo.cl"
+                       class="mt-1.5 h-11 w-full rounded-xl border border-slate-200 bg-white px-3.5 text-sm shadow-sm transition placeholder:text-slate-400 focus:border-brand-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-300" />
+                <p id="contact-email-error" class="hidden text-xs leading-relaxed text-rose-700"></p>
+              </div>
+
+              <div>
+                <label for="contact-message" class="block text-sm font-medium text-slate-700">Mensaje</label>
+                <textarea id="contact-message" name="message" rows="5" maxlength="5000" placeholder="Cuéntanos en qué te podemos ayudar."
+                          class="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm shadow-sm transition placeholder:text-slate-400 focus:border-brand-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-300"></textarea>
+                <p id="contact-message-error" class="hidden text-xs leading-relaxed text-rose-700"></p>
+              </div>
+
+              <button id="contact-submit" type="submit"
+                      class="h-11 w-full rounded-xl bg-brand-600 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-300">
+                Enviar mensaje
+              </button>
+
+              <p id="contact-status" role="status" aria-live="polite" class="hidden rounded-xl border px-3.5 py-2.5 text-sm leading-relaxed"></p>
+            </form>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================== ACCESO / REGISTRO ============================== -->
+    <section id="acceso" class="border-t border-slate-200 bg-white">
+      <div class="mx-auto max-w-6xl px-4 py-14">
+        <!-- Logged-in welcome: hidden by default; when the visitor already
+             holds a session the JS below shows this card and hides the
+             login/registro cards and this heading (they are never removed
+             from markup, just hidden wholesale). -->
+        <div id="auth-welcome" hidden class="text-center">
+          <div class="mx-auto max-w-md rounded-2xl border border-slate-200 bg-[rgb(var(--c-bg))] p-8 shadow-sm">
+            <p data-welcome-text class="text-base font-semibold leading-relaxed">Bienvenido de nuevo: ya tienes una sesión activa; tu panel te espera.</p>
+            <a href="app.html"
+               class="mt-5 inline-flex h-11 items-center justify-center rounded-xl bg-brand-600 px-6 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-300">
+              Abrir el panel
+            </a>
+          </div>
+        </div>
+        <div data-auth-heading class="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h2 class="font-display text-2xl font-semibold tracking-tight sm:text-3xl">Empieza hoy</h2>
+            <p class="mt-2 text-sm text-slate-600">Entra en un minuto: con tu contraseña o con un enlace a tu correo para definirla (vence en 15 minutos).</p>
+          </div>
+          <!-- Side illustration (hidden on very small screens to keep the
+               section airy): protected access + welcome credits, in the
+               same duotone language as the hero. -->
+          <svg viewBox="0 0 320 190" role="img" aria-labelledby="acceso-ilu-title" class="hidden w-full max-w-xs sm:block">
+            <title id="acceso-ilu-title">Ilustración: acceso protegido al panel, con el enlace de acceso y los créditos de bienvenida</title>
+            <ellipse cx="160" cy="104" rx="150" ry="78" style="fill: rgb(var(--c-accent-soft))" opacity="0.5" />
+            <!-- Laptop: the panel -->
+            <rect x="66" y="44" width="148" height="94" rx="10" style="fill: rgb(var(--c-surface))" stroke="rgb(var(--c-border))" stroke-width="1.5" />
+            <path d="M44 148h192l-9 14H53z" style="fill: rgb(var(--c-surface-2))" stroke="rgb(var(--c-border))" stroke-width="1.5" />
+            <path d="M140 55l17 5.5v12.5c0 10.4-7 17.6-17 21-10-3.4-17-10.6-17-21V60.5z" style="fill: rgb(var(--c-accent-soft))" stroke="rgb(var(--c-accent))" stroke-width="1.8" stroke-linejoin="round" />
+            <circle cx="140" cy="73" r="4" style="fill: rgb(var(--c-accent))" />
+            <rect x="94" y="92" width="92" height="4.5" rx="2.25" style="fill: rgb(var(--c-border-soft))" />
+            <rect x="94" y="102" width="72" height="4.5" rx="2.25" style="fill: rgb(var(--c-border-soft))" />
+            <rect x="94" y="112" width="84" height="4.5" rx="2.25" style="fill: rgb(var(--c-border-soft))" />
+            <!-- Envelope: the access link -->
+            <g transform="translate(240 56) rotate(8)">
+              <rect x="-34" y="-22" width="68" height="44" rx="6" style="fill: rgb(var(--c-surface))" stroke="rgb(var(--c-border-strong))" stroke-width="1.6" />
+              <path d="M-34 -16L0 8 34 -16" style="fill: none; stroke: rgb(var(--c-border-strong)); stroke-width: 1.6; stroke-linejoin: round" />
+              <circle cx="0" cy="8" r="5" style="fill: rgb(var(--c-accent))" opacity="0.85" />
+            </g>
+            <!-- Welcome credits chip (same motif as the hero) -->
+            <g transform="translate(58 164)">
+              <rect x="-6" y="-6" width="176" height="46" rx="14" style="fill: rgb(var(--c-text))" opacity="0.07" />
+              <rect x="0" y="0" width="170" height="40" rx="12" style="fill: rgb(var(--c-surface))" stroke="rgb(var(--c-border-soft))" />
+              <circle cx="22" cy="20" r="10" style="fill: rgb(var(--c-accent-soft))" stroke="rgb(var(--c-accent))" stroke-width="1.5" />
+              <circle cx="22" cy="20" r="3.4" style="fill: rgb(var(--c-accent))" />
+              <rect x="40" y="17.5" width="88" height="5" rx="2.5" style="fill: rgb(var(--c-border))" />
+            </g>
+          </svg>
+        </div>
+
+        <div class="mt-8 grid gap-6 md:grid-cols-2">
+          <!-- LOGIN -->
+          <div id="login" class="rounded-2xl border border-slate-200 bg-[rgb(var(--c-bg))] p-6 sm:p-8">
+            <h3 class="font-display text-xl font-semibold">Iniciar sesión</h3>
+            <p class="mt-1 text-sm text-slate-600">¿Ya tienes cuenta? Entra con tu contraseña o pide un enlace para definirla.</p>
+            <form id="form-login" class="mt-5 space-y-4">
+              <div>
+                <label for="login-email" class="block text-sm font-medium text-slate-700">Correo electrónico</label>
+                <input id="login-email" name="email" type="email" required autocomplete="email" placeholder="tu@correo.cl"
+                       class="mt-1.5 h-11 w-full rounded-xl border border-slate-200 bg-white px-3.5 text-sm shadow-sm transition placeholder:text-slate-400 focus:border-brand-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-300" />
+              </div>
+              <div>
+                <label for="login-password" class="block text-sm font-medium text-slate-700">Contraseña <span data-password-hint class="font-normal text-slate-500">(opcional: si la dejas vacía, te enviamos un enlace para definirla)</span></label>
+                <input id="login-password" name="password" type="password" autocomplete="current-password" placeholder="Tu contraseña"
+                       class="mt-1.5 h-11 w-full rounded-xl border border-slate-200 bg-white px-3.5 text-sm shadow-sm transition placeholder:text-slate-400 focus:border-brand-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-300" />
+              </div>
+              <!-- Optional remember-me: T&C is only enforced on registro
+                   and on the scan modal; login keeps the flow light. When
+                   unchecked, the backend issues session-scope cookies that
+                   die with the browser (see setAuthCookies remember). -->
+              <div class="space-y-1.5">
+                <label for="login-remember" class="flex items-start gap-2.5 text-sm text-slate-700">
+                  <input id="login-remember" name="remember" type="checkbox"
+                         class="mt-0.5 h-4 w-4 rounded border-slate-300 text-brand-600 focus-visible:ring-2 focus-visible:ring-brand-300" />
+                  Recordar sesión
+                </label>
+                <p class="text-xs leading-relaxed text-slate-500">Si lo desmarcas, tu sesión termina cuando cierres el navegador.</p>
+              </div>
+              <p data-error role="alert" class="hidden rounded-xl border border-rose-200 bg-rose-50 px-3.5 py-2.5 text-sm text-rose-800"></p>
+              <button type="submit"
+                      class="h-11 w-full rounded-xl bg-brand-600 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-300">
+                Iniciar sesión
+              </button>
+              <p class="text-center text-sm">
+                <button type="button" id="login-recover" class="font-medium text-brand-700 underline decoration-brand-200 underline-offset-2 transition hover:decoration-brand-500 disabled:cursor-not-allowed disabled:opacity-50">Olvidé mi contraseña</button>
+              </p>
+            </form>
+            <div data-success class="mt-5 hidden rounded-2xl border border-emerald-200 bg-emerald-50/60 p-5 text-center">
+              <svg class="mx-auto h-9 w-9 text-emerald-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10" /><path d="m8.5 12.5 2.5 2.5 4.5-5" /></svg>
+              <h4 class="mt-2 text-base font-semibold text-emerald-900">Revisa tu correo</h4>
+              <p class="mt-1 text-sm leading-relaxed text-emerald-800">Te enviamos un enlace a <strong data-success-email></strong> para definir tu contraseña. Vence en 15 minutos.</p>
+              <p data-recovery-note class="mt-2 hidden text-xs leading-relaxed text-emerald-800">Con ese enlace entras sin contraseña y, desde tu <strong>Perfil</strong>, puedes dejar guardada una nueva para la próxima vez.</p>
+              <p class="mt-3 text-xs text-emerald-800">¿Ya hiciste clic en el enlace? <a href="app.html" class="font-semibold text-emerald-900 underline underline-offset-2">Abrir el panel</a></p>
+            </div>
+          </div>
+
+          <!-- REGISTRO -->
+          <div id="registro" class="rounded-2xl border-2 border-brand-200 bg-[rgb(var(--c-bg))] p-6 sm:p-8">
+            <div class="flex items-center justify-between gap-2">
+              <h3 class="font-display text-xl font-semibold">Crear cuenta</h3>
+            </div>
+            <!-- Welcome credits highlight: a real, unconditional gift.
+                 Transparent per the empathy contract: no card and no first
+                 recharge are required to receive it. -->
+            <div class="mt-3 flex items-start gap-2.5 rounded-xl border-2 border-emerald-200 bg-emerald-50 px-3.5 py-2.5">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.7" stroke="currentColor" class="mt-0.5 h-5 w-5 shrink-0 text-emerald-600" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M21 11.25v8.25a1.5 1.5 0 01-1.5 1.5H5.25a1.5 1.5 0 01-1.5-1.5v-8.25M12 4.875A2.625 2.625 0 109.375 7.5H12m0-2.625V7.5m0-2.625A2.625 2.625 0 1114.625 7.5H12m0 0V21m-8.625-9.75h18c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125h-18c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
+              </svg>
+              <p class="text-sm leading-tight font-bold text-emerald-900">
+                100 créditos gratis
+                <span class="mt-0.5 block text-xs font-medium text-emerald-700">De bienvenida: sin tarjeta y sin recarga mínima.</span>
+              </p>
+            </div>
+            <p class="mt-1 text-sm text-slate-600">Regístrate y analiza tu primer sitio hoy mismo.</p>
+            <form id="form-registro" class="mt-5 space-y-4">
+              <div>
+                <label for="registro-name" class="block text-sm font-medium text-slate-700">Tu nombre</label>
+                <input id="registro-name" name="name" type="text" required autocomplete="name" placeholder="Cómo te llamamos"
+                       class="mt-1.5 h-11 w-full rounded-xl border border-slate-200 bg-white px-3.5 text-sm shadow-sm transition placeholder:text-slate-400 focus:border-brand-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-300" />
+              </div>
+              <div>
+                <label for="registro-email" class="block text-sm font-medium text-slate-700">Correo electrónico</label>
+                <input id="registro-email" name="email" type="email" required autocomplete="email" placeholder="tu@correo.cl"
+                       class="mt-1.5 h-11 w-full rounded-xl border border-slate-200 bg-white px-3.5 text-sm shadow-sm transition placeholder:text-slate-400 focus:border-brand-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-300" />
+              </div>
+              <div>
+                <label for="registro-password" class="block text-sm font-medium text-slate-700">Contraseña <span class="font-normal text-slate-500">(mínimo 8 caracteres)</span></label>
+                <div class="relative mt-1.5">
+                  <input id="registro-password" name="password" type="password" required minlength="8" autocomplete="new-password" placeholder="Tu contraseña" data-strength-for="registro-password-strength"
+                         class="h-11 w-full rounded-xl border border-slate-200 bg-white px-3.5 pr-11 text-sm shadow-sm transition placeholder:text-slate-400 focus:border-brand-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-300" />
+                  <button type="button" data-password-eye aria-pressed="false" aria-label="Mostrar contraseña" title="Mostrar contraseña"
+                          class="absolute right-1.5 top-1/2 -translate-y-1/2 rounded-lg p-1.5 text-slate-400 transition hover:text-slate-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-300">
+                    <svg data-eye-icon xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.7" stroke="currentColor" class="h-5 w-5" aria-hidden="true">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    <svg data-eye-off-icon xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.7" stroke="currentColor" class="hidden h-5 w-5" aria-hidden="true">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" />
+                    </svg>
+                  </button>
+                </div>
+                <div id="registro-password-strength" class="hidden mt-2 flex flex-col gap-1" role="status" aria-live="polite">
+                  <div class="flex gap-1" aria-hidden="true">
+                    <span data-strength-seg class="h-1.5 flex-1 rounded-full bg-slate-200 transition"></span>
+                    <span data-strength-seg class="h-1.5 flex-1 rounded-full bg-slate-200 transition"></span>
+                    <span data-strength-seg class="h-1.5 flex-1 rounded-full bg-slate-200 transition"></span>
+                  </div>
+                  <p data-strength-text class="text-xs text-slate-500"></p>
+                </div>
+              </div>
+              <div>
+                <label for="registro-password-confirm" class="block text-sm font-medium text-slate-700">Confirmar contraseña</label>
+                <div class="relative mt-1.5">
+                  <input id="registro-password-confirm" name="password_confirm" type="password" required minlength="8" autocomplete="new-password" placeholder="Repite tu contraseña"
+                         class="h-11 w-full rounded-xl border border-slate-200 bg-white px-3.5 pr-11 text-sm shadow-sm transition placeholder:text-slate-400 focus:border-brand-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-300" />
+                  <button type="button" data-password-eye aria-pressed="false" aria-label="Mostrar contraseña" title="Mostrar contraseña"
+                          class="absolute right-1.5 top-1/2 -translate-y-1/2 rounded-lg p-1.5 text-slate-400 transition hover:text-slate-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-300">
+                    <svg data-eye-icon xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.7" stroke="currentColor" class="h-5 w-5" aria-hidden="true">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    <svg data-eye-off-icon xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.7" stroke="currentColor" class="hidden h-5 w-5" aria-hidden="true">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+              <div class="flex items-start gap-2.5">
+                <input id="registro-terms" name="terms" type="checkbox" required
+                       class="mt-0.5 h-4 w-4 rounded border-slate-300 text-brand-600 focus-visible:ring-2 focus-visible:ring-brand-300" />
+                <label for="registro-terms" class="text-xs leading-relaxed text-slate-600">
+                  Acepto los <button type="button" data-legal-modal="terminos" class="font-medium text-brand-700 underline decoration-brand-200 underline-offset-2 hover:decoration-brand-500">Términos y Condiciones</button> y la <button type="button" data-legal-modal="privacidad" class="font-medium text-brand-700 underline decoration-brand-200 underline-offset-2 hover:decoration-brand-500">Política de Privacidad</button>.
+                </label>
+              </div>
+              <div class="flex items-start gap-2.5">
+                <input id="registro-newsletter" name="newsletter" type="checkbox"
+                       class="mt-0.5 h-4 w-4 rounded border-slate-300 text-brand-600 focus-visible:ring-2 focus-visible:ring-brand-300" />
+                <label for="registro-newsletter" class="text-xs leading-relaxed text-slate-600">Avísame de novedades y cambios de la ley (opcional).</label>
+              </div>
+              <p data-error role="alert" class="hidden rounded-xl border border-rose-200 bg-rose-50 px-3.5 py-2.5 text-sm text-rose-800"></p>
+              <button type="submit"
+                      class="h-11 w-full rounded-xl bg-brand-600 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-300">
+                Crear mi cuenta gratis
+              </button>
+            </form>
+            <div data-success class="mt-5 hidden rounded-2xl border border-emerald-200 bg-emerald-50/60 p-5 text-center">
+              <svg class="mx-auto h-9 w-9 text-emerald-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10" /><path d="m8.5 12.5 2.5 2.5 4.5-5" /></svg>
+              <h4 class="mt-2 text-base font-semibold text-emerald-900">¡Casi listo!</h4>
+              <p class="mt-1 text-sm leading-relaxed text-emerald-800">Te enviamos el enlace de bienvenida a <strong data-success-email></strong>. Al confirmarlo acreditamos tus <strong>100 créditos</strong>.</p>
+              <p class="mt-3 text-xs text-emerald-800">¿Ya confirmaste? <a href="app.html" class="font-semibold text-emerald-900 underline underline-offset-2">Abrir el panel</a></p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================== MODAL: CORREO PARA ESCANEAR ============================== -->
+    
+    <!-- ============================== RECARGAS (FRONT PÚBLICO DE PAGOS) ============================== -->
+    <!-- Los packs son públicos: cualquiera puede verlos y elegir el suyo SIN
+         cuenta. El pago sí exige una cuenta real: al presionar el botón se
+         abre el modal con el formulario de registro de esta misma página
+         (mismo formulario, misma validación, mismos 100 créditos de
+         bienvenida) y, al crearse la cuenta, el botón queda desbloqueado.
+         El servidor sigue siendo la autoridad: POST /payments/orders exige
+         sesión de todos modos. -->
+    <section id="recargas" class="border-t border-slate-200 bg-white">
+      <div class="mx-auto max-w-6xl px-4 py-14">
+        <div class="mx-auto max-w-2xl text-center">
+          <h2 class="font-display text-2xl font-semibold tracking-tight sm:text-3xl">Elige tu pack y recarga</h2>
+          <p class="mt-3 text-base leading-relaxed text-slate-600">
+            Puedes ver los packs y elegir el tuyo sin cuenta. Para pagar te pedimos que crees
+            la tuya: toma un par de minutos y recibes 100 créditos de bienvenida para empezar.
+          </p>
+        </div>
+
+        <div class="mx-auto mt-10 max-w-3xl"
+             data-checkout
+             data-checkout-heart="cotizaia"
+             data-checkout-register-form="form-registro"
+             data-checkout-register-title="Crea tu cuenta para pagar"
+             data-checkout-register-description="Escribe tu nombre, tu correo y una contraseña. Te acreditamos 100 créditos de bienvenida y tu pago sigue aquí mismo."
+             data-checkout-wallet-url="app.html"
+             data-checkout-wallet-label="Ir a mi panel">
+          <div class="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-[rgb(var(--c-bg))] p-6 shadow-sm">
+            <p class="text-sm font-semibold text-slate-900">Elige el pack que mejor te calza</p>
+
+            <!-- Packs: los mismos montos del panel Billetera. El monto
+                 elegido vive en el input oculto y lo lee el checkout. -->
+            <input type="hidden" data-checkout-amount value="5000">
+
+            <div data-checkout-packs class="grid grid-cols-1 gap-3 sm:grid-cols-3">
+              <button type="button" data-amount="1000" aria-pressed="false" class="topup-pack relative flex flex-col gap-1.5 rounded-2xl border border-slate-200 bg-white p-4 text-left transition hover:border-slate-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 aria-pressed:border-brand-600 aria-pressed:bg-brand-50 aria-pressed:ring-2 aria-pressed:ring-brand-600">
+                <span class="text-sm font-semibold text-slate-900">Pack 1 · Arranque</span>
+                <span class="text-lg font-semibold text-slate-900">$1.000 <span class="text-xs font-normal text-slate-500">CLP</span></span>
+                <span class="text-xs font-semibold text-brand-700">→ 1.000 créditos</span>
+                <span class="text-xs leading-relaxed text-slate-500">Para el primer análisis, sin apuro.</span>
+                <span class="mt-1 flex flex-col gap-1 text-xs leading-relaxed text-slate-600">
+                  <span class="flex items-start gap-1.5"><span class="text-brand-600" aria-hidden="true">✓</span>Analiza tu sitio y revisa el informe</span>
+                  <span class="flex items-start gap-1.5"><span class="text-brand-600" aria-hidden="true">✓</span>Sin suscripción: pagas una vez</span>
+                </span>
+              </button>
+
+              <button type="button" data-amount="5000" aria-pressed="true" class="topup-pack relative flex flex-col gap-1.5 rounded-2xl border border-slate-200 bg-white p-4 text-left transition hover:border-slate-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 aria-pressed:border-brand-600 aria-pressed:bg-brand-50 aria-pressed:ring-2 aria-pressed:ring-brand-600">
+                <span class="absolute -top-2.5 left-4 rounded-full bg-brand-600 px-2 py-0.5 text-[11px] font-semibold text-white shadow-sm">El más elegido</span>
+                <span class="text-sm font-semibold text-slate-900">Pack 2 · Constante</span>
+                <span class="text-lg font-semibold text-slate-900">$5.000 <span class="text-xs font-normal text-slate-500">CLP</span></span>
+                <span class="text-xs font-semibold text-brand-700">→ 5.000 créditos</span>
+                <span class="text-xs leading-relaxed text-slate-500">Para revisar varios sitios con calma.</span>
+                <span class="mt-1 flex flex-col gap-1 text-xs leading-relaxed text-slate-600">
+                  <span class="flex items-start gap-1.5"><span class="text-brand-600" aria-hidden="true">✓</span>Rinde para varios sitios en campaña</span>
+                  <span class="flex items-start gap-1.5"><span class="text-brand-600" aria-hidden="true">✓</span>Saldo compartido con toda tu cuenta</span>
+                </span>
+              </button>
+
+              <button type="button" data-amount="10000" aria-pressed="false" class="topup-pack relative flex flex-col gap-1.5 rounded-2xl border border-slate-200 bg-white p-4 text-left transition hover:border-slate-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 aria-pressed:border-brand-600 aria-pressed:bg-brand-50 aria-pressed:ring-2 aria-pressed:ring-brand-600">
+                <span class="text-sm font-semibold text-slate-900">Pack 3 · A fondo</span>
+                <span class="text-lg font-semibold text-slate-900">$10.000 <span class="text-xs font-normal text-slate-500">CLP</span></span>
+                <span class="text-xs font-semibold text-brand-700">→ 10.000 créditos</span>
+                <span class="text-xs leading-relaxed text-slate-500">El máximo por recarga, para proyectos intensivos.</span>
+                <span class="mt-1 flex flex-col gap-1 text-xs leading-relaxed text-slate-600">
+                  <span class="flex items-start gap-1.5"><span class="text-brand-600" aria-hidden="true">✓</span>Tope por recarga del servicio</span>
+                  <span class="flex items-start gap-1.5"><span class="text-brand-600" aria-hidden="true">✓</span>Sin tope mensual: recarga cuando lo necesites</span>
+                </span>
+              </button>
+            </div>
+
+            <p class="text-xs leading-relaxed text-slate-500">
+              1 crédito ≈ $1 CLP (solo referencia visual). Sin suscripción ni cargos ocultos: ves el total antes de confirmar.
+            </p>
+
+            <!-- Documento: boleta por defecto; la factura pide los datos tributarios. -->
+            <div class="flex flex-wrap items-center gap-3" role="radiogroup" aria-label="Tipo de documento">
+              <span class="text-sm font-medium text-slate-700">Documento:</span>
+              <label class="inline-flex items-center gap-1.5 text-sm text-slate-800">
+                <input type="radio" name="checkout-doc-type" value="46" class="accent-blue-600" checked>
+                Boleta
+              </label>
+              <label class="inline-flex items-center gap-1.5 text-sm text-slate-800">
+                <input type="radio" name="checkout-doc-type" value="33" class="accent-blue-600">
+                Factura
+              </label>
+            </div>
+
+            <div data-checkout-fiscal class="hidden rounded-xl border border-slate-200 bg-slate-50 p-4" role="group" aria-label="Datos tributarios para factura">
+              <p class="text-sm font-semibold text-slate-800">Datos para la factura electrónica</p>
+              <p class="mt-0.5 text-xs text-slate-500">Con estos datos emitimos tu factura. Revísalos con calma: llegan tal cual al documento.</p>
+              <div class="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <label class="flex flex-col gap-1 text-sm">
+                  <span class="font-medium text-slate-700">RUT <span class="text-slate-400">*</span></span>
+                  <input id="checkout-rut" type="text" placeholder="12.345.678-5" maxlength="12" autocomplete="off" class="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 focus:border-blue-400 focus:outline-none">
+                  <span class="text-[11px] text-slate-500">Con punto y guión, ej: 12.345.678-5</span>
+                </label>
+                <label class="flex flex-col gap-1 text-sm">
+                  <span class="font-medium text-slate-700">Razón social <span class="text-slate-400">*</span></span>
+                  <input id="checkout-razon" type="text" maxlength="120" autocomplete="organization" class="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 focus:border-blue-400 focus:outline-none">
+                </label>
+                <label class="flex flex-col gap-1 text-sm">
+                  <span class="font-medium text-slate-700">Giro <span class="text-slate-400">*</span></span>
+                  <input id="checkout-giro" type="text" maxlength="120" class="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 focus:border-blue-400 focus:outline-none">
+                </label>
+                <label class="flex flex-col gap-1 text-sm">
+                  <span class="font-medium text-slate-700">Dirección <span class="text-slate-400">*</span></span>
+                  <input id="checkout-direccion" type="text" maxlength="160" autocomplete="street-address" class="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 focus:border-blue-400 focus:outline-none">
+                </label>
+                <label class="flex flex-col gap-1 text-sm">
+                  <span class="font-medium text-slate-700">Comuna <span class="text-slate-400">*</span></span>
+                  <input id="checkout-comuna" type="text" maxlength="80" class="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 focus:border-blue-400 focus:outline-none">
+                </label>
+                <label class="flex flex-col gap-1 text-sm">
+                  <span class="font-medium text-slate-700">Correo de contacto <span class="text-slate-400">*</span></span>
+                  <input id="checkout-email" type="email" maxlength="120" autocomplete="email" class="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 focus:border-blue-400 focus:outline-none">
+                  <span class="text-[11px] text-slate-500">Aquí llega la factura.</span>
+                </label>
+              </div>
+              <p class="mt-3 text-xs leading-relaxed text-slate-500">
+                La boleta no necesita estos datos: solo se piden cuando eliges factura.
+              </p>
+            </div>
+
+            <button data-checkout-submit type="button" class="w-full rounded-xl bg-blue-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-300">
+              <span data-checkout-submit-label>Crear cuenta para pagar</span>
+            </button>
+
+            <p data-checkout-lock class="text-xs leading-relaxed text-slate-500">
+              Para pagar necesitas tu cuenta: créala en un par de minutos y recibes 100 créditos de bienvenida. Después este botón queda habilitado.
+            </p>
+            <p data-checkout-balance class="hidden text-xs leading-relaxed text-slate-500"></p>
+            <p data-checkout-notice class="hidden rounded-xl border border-emerald-200 bg-emerald-50 px-3.5 py-2.5 text-sm leading-relaxed text-emerald-800" role="status" aria-live="polite"></p>
+            <p data-checkout-error class="hidden rounded-xl border border-rose-200 bg-rose-50 px-3.5 py-2.5 text-sm leading-relaxed text-rose-800" role="alert" aria-live="polite"></p>
+            <div data-checkout-receipt class="hidden"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="border-t border-slate-200">
+    <div class="mx-auto max-w-6xl px-4 py-8 text-center">
+      <p class="text-sm leading-relaxed text-slate-600">
+        Las cotizaciones se preparan con asistencia de IA y las revisa una persona antes de ser una oferta final.
+        El principio rector es: <strong class="font-semibold text-slate-800">empatía, amabilidad y dignidad humana</strong> gobiernan todo.
+      </p>
+      <p class="mt-3 text-xs text-slate-500">
+        © 2026 Carrocerías A. Rodríguez · <button type="button" data-legal-modal="terminos" class="underline underline-offset-2 hover:text-slate-700">Términos</button> · <button type="button" data-legal-modal="privacidad" class="underline underline-offset-2 hover:text-slate-700">Privacidad y Seguridad</button> · La cotización es una propuesta; requiere revisión de nuestro equipo. No te compromete a nada.
+      </p>
+    </div>
+  </footer>
+
+  <!-- ============ MODALES LEGALES: TÉRMINOS + PRIVACIDAD/SEGURIDAD ============
+       Páginas informativas en formato modal (pedido del dueño, 2026-10-23):
+       no navegan, no pierden el formulario a medio llenar. Contenido:
+       lenguaje claro, sin intimidación; explican la infraestructura
+       "anonymizer" que seudonimiza los datos personales antes de que
+       cualquier motor de IA los vea. -->
+  <div id="modal-legal-terminos" hidden class="fixed inset-0 z-[70]" data-legal-panel>
+    <div data-legal-backdrop class="ld-modal-backdrop absolute inset-0 bg-slate-900/40 backdrop-blur-sm"></div>
+    <div class="absolute inset-0 flex items-center justify-center p-4">
+      <div role="dialog" aria-modal="true" aria-labelledby="legal-terminos-title"
+           class="ld-modal-card flex max-h-[85vh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl">
+        <div class="flex items-start justify-between gap-3 border-b border-slate-200 p-5 sm:p-6">
+          <div class="min-w-0">
+            <p class="text-xs font-semibold uppercase tracking-wide text-brand-700">Información de apoyo</p>
+            <h3 id="legal-terminos-title" class="mt-1 font-display text-xl font-semibold">Términos y Condiciones</h3>
+          </div>
+          <button type="button" data-legal-close aria-label="Cerrar"
+                  class="rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-300">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 18 18 6M6 6l12 12" /></svg>
+          </button>
+        </div>
+        <div class="space-y-5 overflow-y-auto p-5 text-sm leading-relaxed text-slate-700 sm:p-6">
+          <div class="rounded-xl border border-amber-200 bg-amber-50 px-3.5 py-2.5 text-amber-900">
+            <strong>En una frase:</strong> preparamos cotizaciones de trabajos de carrocería con asistencia de IA. La propuesta la revisa una persona de nuestro equipo antes de enviarse y no te compromete a nada.
+          </div>
+          <section>
+            <h4 class="font-semibold text-slate-900">Qué hace el servicio</h4>
+            <ul class="mt-2 list-disc space-y-1.5 pl-5">
+              <li>A partir de lo que describes en el formulario (o en el chat del panel) prepara una cotización con el detalle por producto, el precio unitario y el total.</li>
+              <li>Los precios salen de nuestra <strong>lista vigente</strong>. Si tu proyecto necesita algo que no está en la lista, te lo cotizamos a medida y lo dejamos por escrito.</li>
+              <li>La cotización se genera con asistencia de IA y lleva siempre la leyenda de revisión humana.</li>
+            </ul>
+          </section>
+          <section>
+            <h4 class="font-semibold text-slate-900">Qué NO hace</h4>
+            <ul class="mt-2 list-disc space-y-1.5 pl-5">
+              <li>No es asesoría legal ni contractual: las condiciones comerciales de cada trabajo se acuerdan aparte, por escrito, con nuestro equipo.</li>
+              <li>No garantiza precios futuros: la cotización tiene fecha de vigencia y la confirmamos contigo antes de trabajar.</li>
+              <li>No accede a cuentas ajenas ni a datos que requieran credenciales.</li>
+              <li>No decide por ti: si tu proyecto necesita una medida especial, te lo decimos y lo conversamos contigo.</li>
+            </ul>
+          </section>
+          <section>
+            <h4 class="font-semibold text-slate-900">Tu cuenta y los créditos</h4>
+            <ul class="mt-2 list-disc space-y-1.5 pl-5">
+              <li>Recibes <strong>100 créditos de bienvenida</strong>, sin tarjeta y sin recarga mínima.</li>
+              <li>Los créditos son una unidad interna sin valor monetario; su referencia en pesos es solo transparencia comercial.</li>
+              <li>Ves el costo antes de cada operación. Si una operación falla antes de entregarte el resultado, no se cobra.</li>
+              <li>No hay suscripciones sorpresa: pagas por uso.</li>
+            </ul>
+          </section>
+          <section>
+            <h4 class="font-semibold text-slate-900">Uso aceptable</h4>
+            <p class="mt-2">Describe proyectos tuyos o para los que tengas autorización. No uses el servicio para hostigar, para compartir información de terceros sin permiso, ni para forzar la infraestructura (hay límites de uso que protegen la disponibilidad para todos).</p>
+          </section>
+          <section>
+            <h4 class="font-semibold text-slate-900">Tus documentos</h4>
+            <p class="mt-2">Lo que escribes o adjuntas sigue siendo tuyo. Solo lo procesamos para prestarte el servicio, seudonimizado (ver <button type="button" data-legal-modal="privacidad" class="font-medium text-brand-700 underline decoration-brand-200 underline-offset-2 hover:decoration-brand-500">Privacidad y Seguridad</button>) y puedes eliminarlo cuando quieras.</p>
+          </section>
+          <section>
+            <h4 class="font-semibold text-slate-900">Cambios y ley aplicable</h4>
+            <p class="mt-2">Si estos términos cambian de forma relevante te avisamos por correo. Se rigen por la ley chilena. Para cualquier duda, escríbenos desde el formulario de contacto de esta página.</p>
+          </section>
+          <p class="rounded-xl bg-slate-50 px-3.5 py-2.5 text-xs text-slate-600">Este texto es informativo, está escrito para entenderse y no reemplaza un contrato para tu caso concreto.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="modal-legal-privacidad" hidden class="fixed inset-0 z-[70]" data-legal-panel>
+    <div data-legal-backdrop class="ld-modal-backdrop absolute inset-0 bg-slate-900/40 backdrop-blur-sm"></div>
+    <div class="absolute inset-0 flex items-center justify-center p-4">
+      <div role="dialog" aria-modal="true" aria-labelledby="legal-privacidad-title"
+           class="ld-modal-card flex max-h-[85vh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl">
+        <div class="flex items-start justify-between gap-3 border-b border-slate-200 p-5 sm:p-6">
+          <div class="min-w-0">
+            <p class="text-xs font-semibold uppercase tracking-wide text-brand-700">Información de apoyo</p>
+            <h3 id="legal-privacidad-title" class="mt-1 font-display text-xl font-semibold">Privacidad y Seguridad</h3>
+          </div>
+          <button type="button" data-legal-close aria-label="Cerrar"
+                  class="rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-300">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 18 18 6M6 6l12 12" /></svg>
+          </button>
+        </div>
+        <div class="space-y-5 overflow-y-auto p-5 text-sm leading-relaxed text-slate-700 sm:p-6">
+          <div class="rounded-xl border border-brand-200 bg-brand-50 px-3.5 py-2.5 text-brand-900">
+            <strong>El principio:</strong> el motor de IA que prepara tu cotización nunca ve tu identidad ni la de las personas que aparecen en tus documentos. Seudonimizamos primero; analizamos después.
+          </div>
+          <section>
+            <h4 class="font-semibold text-slate-900">Cómo funciona nuestro anonymizer</h4>
+            <ol class="mt-2 list-decimal space-y-1.5 pl-5">
+              <li><strong>Detección.</strong> Antes de que cualquier texto salga de nuestros servidores, identificamos los datos personales: nombres, RUT, correos, teléfonos, direcciones y números de causa.</li>
+              <li><strong>Reemplazo.</strong> Cada dato se sustituye por una etiqueta estable —<code class="rounded bg-slate-100 px-1.5 py-0.5 text-xs">[PERSONA_1]</code>, <code class="rounded bg-slate-100 px-1.5 py-0.5 text-xs">[CAUSA_2]</code>— y el análisis trabaja siempre sobre ese texto etiquetado.</li>
+              <li><strong>Mapa cifrado.</strong> La equivalencia etiqueta → dato real vive aparte, cifrada con AES-256-GCM y una clave que no está en el código. Es lo único que permite mostrarte tus datos de vuelta.</li>
+              <li><strong>Restitución solo para ti.</strong> Al volver el resultado, las etiquetas se restauran en tu pantalla, dentro de tu sesión. El proveedor de IA que participó en el análisis no recibió el dato real en ningún momento.</li>
+              <li><strong>Sin invenciones.</strong> Si la IA menciona una fecha, monto o número que no estaba en los documentos, se marca en amarillo como <em>[POR COMPLETAR - Verificar]</em>: preferimos un hueco visible antes que un dato falso con apariencia de cierto.</li>
+            </ol>
+          </section>
+          <section>
+            <h4 class="font-semibold text-slate-900">Medidas de seguridad de la plataforma</h4>
+            <ul class="mt-2 list-disc space-y-1.5 pl-5">
+              <li><strong>Conexión cifrada (HTTPS)</strong> en todo el sitio.</li>
+              <li><strong>Contraseñas con bcrypt.</strong> Nunca se guardan ni se transmiten en texto claro.</li>
+              <li><strong>Sesión en cookies httpOnly</strong> (invisibles para JavaScript) con acceso corto y renovación controlada.</li>
+              <li><strong>Aislamiento por cuenta y por espacio de trabajo:</strong> cada consulta verifica que el recurso pertenece a quien lo pide.</li>
+              <li><strong>Almacenamiento privado:</strong> los archivos que adjuntas no son públicos; los accesos usan enlaces temporales de minutos y verifican tu identidad.</li>
+              <li><strong>Registros sin datos personales:</strong> los logs técnicos no contienen documentos, RUT ni contenido jurídico.</li>
+              <li><strong>Límites antiabuso</strong> para proteger el servicio (por ejemplo, 10 operaciones por hora).</li>
+              <li><strong>Eliminación real:</strong> al borrar tu trabajo se eliminan documentos, sus representaciones de búsqueda y el mapa de seudonimización de forma atómica.</li>
+            </ul>
+          </section>
+          <section>
+            <h4 class="font-semibold text-slate-900">Cuánto tiempo guardamos qué</h4>
+            <ul class="mt-2 list-disc space-y-1.5 pl-5">
+              <li>Si tus créditos se agotan, tu trabajo se conserva con <strong>24 horas de gracia</strong>, con dos avisos amables (a las 6 h y a la 1 h antes del límite) y la opción de recargar y continuar.</li>
+              <li>Los respaldos rotan diariamente con retención acotada y purga automática; no hay recuperación manual de datos de trabajo desde respaldos, y así te lo decimos.</li>
+              <li>Tu cuenta y tus créditos se mantienen hasta que <strong>tú</strong> decides eliminarlos: borrar trabajo no borra tu cuenta ni tu saldo.</li>
+            </ul>
+          </section>
+          <section>
+            <h4 class="font-semibold text-slate-900">Tus derechos (Ley 21.719 y Ley 19.628)</h4>
+            <p class="mt-2">Puedes solicitar acceso, rectificación, cancelación, oposición y portabilidad de tus datos personales. También puedes eliminar tu cuenta directamente desde el panel. Para ejercer cualquier derecho, escríbenos desde el formulario de contacto y te responderemos con un lenguaje claro.</p>
+          </section>
+          <p class="rounded-xl bg-slate-50 px-3.5 py-2.5 text-xs text-slate-600">Esta explicación es informativa y de buena fe sobre cómo funciona la plataforma; no constituye asesoría legal ni un contrato de tratamiento de datos para tu caso particular.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================== LIGHTBOX ============================== -->
+  <!-- Click-to-zoom for the nine section screenshots: one shared viewer,
+       plain Tailwind classes, no dependencies. The full-resolution src of
+       the clicked image is reused directly (assets are not downsized). -->
+  <div id="lightbox" hidden class="fixed inset-0 z-[80]">
+    <!-- bg-slate-900/90 (NOT slate-950): tokens.css maps slate-950 to
+         --c-text, which turns into a LIGHT veil in noche. slate-900 stays
+         near-black in both day and night themes. -->
+    <div data-lightbox-backdrop class="ld-modal-backdrop absolute inset-0 bg-slate-900/90 backdrop-blur-sm"></div>
+    <div class="ld-modal-card absolute inset-0 flex flex-col items-center justify-center gap-3 overflow-y-auto p-4" role="dialog" aria-modal="true" aria-label="Imagen ampliada">
+      <img data-lightbox-img src="" alt="" class="max-h-[90vh] max-w-[92vw] rounded-xl object-contain shadow-2xl" />
+      <p data-lightbox-caption class="max-w-[92vw] text-center text-sm text-slate-200"></p>
+      <button type="button" data-lightbox-close aria-label="Cerrar imagen ampliada"
+              class="absolute right-4 top-4 inline-flex h-10 w-10 items-center justify-center rounded-full bg-slate-800/70 text-slate-200 transition hover:bg-slate-800 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-300">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 18 18 6M6 6l12 12" /></svg>
+      </button>
+    </div>
+  </div>
+
+  <script type="module" src="js/cotizaia.js"></script>
+  <script>
+    // Heart of this surface: wallet and rate limits of the CotizaIA heart.
+    // Set BEFORE anything else reads it (same contract as app.html).
+    const HEART = 'cotizaia';
+    localStorage.setItem('heart_id', HEART);
+
+    // Kind hint shown next to a 401: most existing accounts never set a
+    // password (magic-link only), so we point them back to the link.
+    const PASSWORD_LOGIN_HINT = 'Si nunca fijaste una contraseña, usa el enlace mágico: llega a tu correo y desde tu Perfil puedes dejarla guardada.';
+
+    function setError(form, message, hint) {
+      const box = form.querySelector('[data-error]');
+      box.textContent = '';
+      box.append(document.createTextNode(message));
+      if (hint) {
+        const hintEl = document.createElement('span');
+        hintEl.className = 'mt-1 block text-xs text-rose-700';
+        hintEl.textContent = hint;
+        box.append(hintEl);
+      }
+      box.classList.remove('hidden');
+    }
+
+    function clearError(form) {
+      const box = form.querySelector('[data-error]');
+      box.textContent = '';
+      box.classList.add('hidden');
+    }
+
+    async function requestMagicLink({ name, email, newsletter }) {
+      // The real backend route (public/index.php POST /auth/magic-link):
+      // JSON body, terms_accepted is server-enforced, heart routes the
+      // welcome credit to the wallet this surface spends from.
+      const response = await fetch(window.API('/auth/magic-link'), {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name,
+          email,
+          terms_accepted: true,
+          newsletter: newsletter === true,
+          heart: HEART,
+        }),
+      });
+
+      const data = await response.json().catch(() => ({}));
+
+      if (!response.ok || !data.success) {
+        const err = data.error;
+        const message = typeof err === 'string'
+          ? err
+          : (err && err.message) || 'No pudimos enviar el enlace ahora. Inténtalo de nuevo en unos minutos.';
+        throw new Error(message);
+      }
+
+      return data;
+    }
+
+    // POST /auth/login: email + password + remember opt-in. On success the
+    // backend sets the httpOnly session cookies (persistent 30 days when
+    // remember=true, session-scope when remember=false); the caller then
+    // navigates to the panel. The heart travels with the request: the API
+    // serves several hearts and the balance it returns is THIS panel's.
+    async function loginWithPassword(email, password, remember) {
+      const response = await fetch(window.API('/auth/login'), {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password, remember: remember === true, heart: HEART }),
+      });
+
+      const data = await response.json().catch(() => ({}));
+
+      if (!response.ok || !data.success) {
+        const err = data.error;
+        const message = typeof err === 'string'
+          ? err
+          : (err && err.message) || 'No pudimos iniciar sesión ahora. Inténtalo nuevamente en unos minutos.';
+        throw Object.assign(new Error(message), { status: response.status });
+      }
+
+      return data;
+    }
+
+    // POST /auth/register: creates the account with a password (min 8,
+    // server-enforced) and sets the session cookies in the same response,
+    // so the caller can navigate straight to the panel. Heart flows
+    // (welcome bonus) and terms are server-enforced.
+    async function registerAccount({ name, email, password, newsletter }) {
+      const response = await fetch(window.API('/auth/register'), {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name,
+          email,
+          password,
+          terms_accepted: true,
+          newsletter: newsletter === true,
+          heart: HEART,
+        }),
+      });
+
+      const data = await response.json().catch(() => ({}));
+
+      if (!response.ok || !data.success) {
+        const err = data.error;
+        const message = typeof err === 'string'
+          ? err
+          : (err && err.message) || 'No pudimos crear tu cuenta ahora. Inténtalo nuevamente en unos minutos.';
+        throw new Error(message);
+      }
+
+      return data;
+    }
+
+    function wireAuthForm(formId, options) {
+      const form = document.getElementById(formId);
+
+      if (!form) return;
+
+      form.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        clearError(form);
+
+        const emailInput = form.querySelector('[name="email"]');
+        const email = (emailInput.value || '').trim();
+        const name = options.requireName ? (form.querySelector('[name="name"]').value || '').trim() : '';
+        const newsletterEl = form.querySelector('[name="newsletter"]');
+        const passwordInput = form.querySelector('[name="password"]');
+        const password = passwordInput ? passwordInput.value : '';
+        const usePassword = options.allowPassword && password !== '';
+
+        // Registro con contraseña: server enforces min 8 too, but checking
+        // here keeps the error local and immediate (empatía: no idas y
+        // vueltas al servidor por algo el formulario sabe fallar mejor).
+        if (options.passwordRequired) {
+          if (password.length < 8) {
+            setError(form, 'La contraseña debe tener al menos 8 caracteres. La usas para entrar a tu panel.');
+            passwordInput?.focus();
+            return;
+          }
+          const confirmInput = form.querySelector('[name="password_confirm"]');
+          if (password !== (confirmInput ? confirmInput.value : '')) {
+            setError(form, 'Las contraseñas no coinciden. Revísalas e inténtalo, con calma: sin apuros.');
+            confirmInput?.focus();
+            return;
+          }
+        }
+
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+          setError(form, 'Escribe tu correo para enviarte el enlace de acceso (ejemplo: nombre@correo.cl).');
+          emailInput.focus();
+          return;
+        }
+
+        const button = form.querySelector('button[type="submit"]');
+        const originalText = button.textContent;
+        button.disabled = true;
+        button.textContent = usePassword ? 'Entrando…' : options.loadingText;
+
+        // When true the browser is navigating to the panel: keep the button
+        // disabled and skip the restore in finally.
+        let navigating = false;
+
+        try {
+          if (options.passwordRequired) {
+            // Registro directo: /auth/register sets the session cookies in
+            // this same response, so the visitor lands on their panel with
+            // the welcome credits ready.
+            const payload = await registerAccount({ name, email, password, newsletter: newsletterEl ? newsletterEl.checked : false });
+            const session = payload && payload.data ? payload.data : payload;
+
+            // Anuncia el registro: el checkout público de pagos (los packs
+            // son visibles sin cuenta) consume este evento para desbloquear
+            // el botón de pago SIN sacar a la persona de esta página. Si
+            // nadie lo consume, el flujo normal es abrir el panel.
+            const registered = new CustomEvent('aj:registered', { detail: session, cancelable: true });
+            document.dispatchEvent(registered);
+
+            if (registered.defaultPrevented) {
+              // La superficie pública tomó el control: la sesión ya está
+              // abierta y los 100 créditos de bienvenida acreditados. El
+              // botón vuelve a su estado (finally) y la persona sigue aquí.
+              return;
+            }
+
+            navigating = true;
+            button.textContent = 'Abriendo tu panel…';
+            window.location.assign(options.passwordRedirect || 'app.html');
+            return;
+          }
+
+          if (usePassword) {
+            // "Recordar sesión" is login-only: unchecked → session-scope
+            // cookies. The checkbox is read wherever the login form has one
+            // (registro/scan never touch it).
+            const rememberCheckbox = form.querySelector('[name="remember"]');
+            await loginWithPassword(email, password, rememberCheckbox ? rememberCheckbox.checked : true);
+            navigating = true;
+            button.textContent = 'Entrando…';
+            window.location.assign(options.passwordRedirect);
+            return;
+          }
+
+          await requestMagicLink({ name, email, newsletter: newsletterEl ? newsletterEl.checked : false });
+          form.hidden = true;
+          const success = form.parentElement.querySelector('[data-success]');
+          success.querySelector('[data-success-email]').textContent = email;
+          const recoveryNote = success.querySelector('[data-recovery-note]');
+          if (recoveryNote) recoveryNote.classList.add('hidden');
+          success.classList.remove('hidden');
+        } catch (error) {
+          setError(form, error.message, error.status === 401 ? PASSWORD_LOGIN_HINT : '');
+        } finally {
+          if (!navigating) {
+            button.disabled = false;
+            button.textContent = originalText;
+          }
+        }
+      });
+    }
+
+    // "Olvidé mi contraseña": request a magic link for the typed email and
+    // explain, kindly, that the link logs them in and Perfil lets them set a
+    // new password.
+    (function wireRecoveryLink() {
+      const link = document.getElementById('login-recover');
+      const form = document.getElementById('form-login');
+      if (!link || !form) return;
+
+      link.addEventListener('click', async () => {
+        clearError(form);
+
+        const emailInput = form.querySelector('[name="email"]');
+        const email = (emailInput.value || '').trim();
+
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+          setError(form, 'Escribe tu correo para enviarte el enlace de acceso (ejemplo: nombre@correo.cl).');
+          emailInput.focus();
+          return;
+        }
+
+        const originalText = link.textContent;
+        link.disabled = true;
+        link.textContent = 'Enviando enlace…';
+
+        try {
+          await requestMagicLink({ name: '', email, newsletter: false });
+          form.hidden = true;
+          const success = form.parentElement.querySelector('[data-success]');
+          success.querySelector('[data-success-email]').textContent = email;
+          const recoveryNote = success.querySelector('[data-recovery-note]');
+          if (recoveryNote) recoveryNote.classList.remove('hidden');
+          success.classList.remove('hidden');
+        } catch (error) {
+          setError(form, error.message);
+        } finally {
+          link.disabled = false;
+          link.textContent = originalText;
+        }
+      });
+    })();
+
+    // ----- Password reveal (eye icon) + advisory strength meter -----
+    // Same contract as the main panel: aria-pressed mirrors the revealed
+    // state, delegated listeners so any future password field works, and
+    // the meter is ADVISORY ONLY (real limits live server-side, bcrypt).
+    // Copy is zero-blame: guide, never scold.
+    document.addEventListener('click', (event) => {
+      const button = event.target && event.target.closest
+        ? event.target.closest('button[data-password-eye]')
+        : null;
+      if (!button || !document.contains(button)) return;
+      const input = button.parentElement.querySelector('input');
+      if (!input) return;
+      const willShow = input.type !== 'text';
+      input.type = willShow ? 'text' : 'password';
+      button.setAttribute('aria-pressed', willShow ? 'true' : 'false');
+      button.setAttribute('aria-label', willShow ? 'Ocultar contraseña' : 'Mostrar contraseña');
+      button.setAttribute('title', willShow ? 'Ocultar contraseña' : 'Mostrar contraseña');
+      const iconEye = button.querySelector('[data-eye-icon]');
+      const iconEyeOff = button.querySelector('[data-eye-off-icon]');
+      if (iconEye) iconEye.classList.toggle('hidden', willShow);
+      if (iconEyeOff) iconEyeOff.classList.toggle('hidden', !willShow);
+    });
+
+    const PASSWORD_STRENGTH_FILL = { debil: 'bg-rose-400', media: 'bg-amber-400', segura: 'bg-emerald-500' };
+    const PASSWORD_STRENGTH_COPY = {
+      corta: 'Fortaleza de la contraseña: por empezar. 8+ caracteres, mezcla mayúsculas, minúsculas y números: entre más larga, más segura.',
+      debil: 'Fortaleza de la contraseña: débil. Puedes reforzarla agregando mayúsculas, números o algunos caracteres más.',
+      media: 'Fortaleza de la contraseña: media. Con 12 o más caracteres y un símbolo queda aún más segura.',
+      segura: 'Fortaleza de la contraseña: segura. Bien: entre más larga, más difícil de adivinar.'
+    };
+    const PASSWORD_STRENGTH_FILLED = { corta: 0, debil: 1, media: 2, segura: 3 };
+
+    function passwordStrength(value) {
+      const hasLower = /[a-záéíóúüñ]/.test(value);
+      const hasUpper = /[A-ZÁÉÍÓÚÜÑ]/.test(value);
+      const hasDigit = /[0-9]/.test(value);
+      const hasSymbol = /[^A-Za-z0-9áéíóúüñÁÉÍÓÚÜÑ]/.test(value);
+      if (value.length >= 12 && hasUpper && hasLower && hasDigit && hasSymbol) return 'segura';
+      if (value.length >= 10 && hasUpper && hasLower && hasDigit) return 'media';
+      if (value.length >= 8 && (hasLower || hasUpper)) return 'debil';
+      return 'corta';
+    }
+
+    function paintPasswordStrength(value, meter) {
+      const level = passwordStrength(value);
+      const filled = PASSWORD_STRENGTH_FILLED[level] || 0;
+      meter.querySelectorAll('[data-strength-seg]').forEach((segment, index) => {
+        const activeColor = index < filled ? PASSWORD_STRENGTH_FILL[level] : null;
+        Object.keys(PASSWORD_STRENGTH_FILL).forEach((levelName) => {
+          segment.classList.toggle(PASSWORD_STRENGTH_FILL[levelName], activeColor === PASSWORD_STRENGTH_FILL[levelName]);
+        });
+        segment.classList.toggle('bg-slate-200', !activeColor);
+      });
+      const text = meter.querySelector('[data-strength-text]');
+      if (text) text.textContent = PASSWORD_STRENGTH_COPY[level];
+      meter.classList.toggle('hidden', value.length === 0);
+    }
+
+    document.addEventListener('input', (event) => {
+      const target = event.target;
+      if (!target || !target.matches || !target.matches('input[data-strength-for]')) return;
+      const meter = document.getElementById(target.dataset.strengthFor || target.getAttribute('data-strength-for'));
+      if (meter) paintPasswordStrength(target.value || '', meter);
+    });
+
+    wireAuthForm('form-login', { requireName: false, loadingText: 'Enviando…', allowPassword: true, passwordRedirect: 'app.html' });
+    wireAuthForm('form-registro', { requireName: true, loadingText: 'Creando tu cuenta…', passwordRequired: true, passwordRedirect: 'app.html' });
+
+    // ============================== RECORDAR SESIÓN ==============================
+    // Persisted opt-in (aj:remember): the panel reads it on every silent
+    // /auth/refresh rotation so a remembered session stays persistent and an
+    // un-remembered session keeps dying with the browser. Stored value:
+    // '1' → true, absent or '0' → false.
+    (function wireRememberSession() {
+      const REMEMBER_KEY = 'aj:remember';
+      const checkbox = document.getElementById('login-remember');
+
+      if (!checkbox) return;
+
+      try {
+        checkbox.checked = localStorage.getItem(REMEMBER_KEY) === '1';
+      } catch (_) { /* storage unavailable: markup default (unchecked) applies */ }
+
+      checkbox.addEventListener('change', () => {
+        try {
+          localStorage.setItem(REMEMBER_KEY, checkbox.checked ? '1' : '0');
+        } catch (_) { /* storage unavailable: the choice just survives the page */ }
+      });
+    })();
+
+    // ============================== LOGGED-IN VISITOR ==============================
+    // Owner (2026-10-22): "si el usuario está logeado el registro y form login
+    // desaparecen del index, y los botones de header cambian a entrar a
+    // panel". One /auth/me probe on load reflows the landing for a returning
+    // user; on any failure the default (visitor) markup stays untouched.
+    // Session knowledge for the scan flow (ldAuthedEmail + body dataset):
+    // clicking "Escanear mi sitio" skips the email gate for a returning
+    // visitor. It stays in memory/DOM only — never localStorage.
+    let ldAuthedEmail = null;
+
+    // Session-aware UI: the header CTAs and the Acceso cards follow the
+    // session. It runs at boot AND when the account is created IN this very
+    // page (the public checkout modal registers without reloading).
+    function revealSessionUi(user) {
+      if (!user) return;
+
+      // Expose the session state for the rest of the page (the checkout
+      // modal and the panel know who is signed in). httpOnly cookies stay
+      // the only session store.
+      document.body.dataset.ldAuthed = '1';
+      ldAuthedEmail = typeof user.email === 'string' ? user.email.trim() : '';
+
+      // Header: hide the auth links, reveal the panel entry. The theme
+      // toggle carries no data-auth-links, so it is never touched.
+      document.querySelectorAll('[data-auth-links]').forEach((el) => el.classList.add('hidden'));
+
+      const enterPanel = document.getElementById('btn-enter-panel');
+      if (enterPanel) enterPanel.hidden = false;
+
+      // Acceso: hide login/registro cards and the heading, show the
+      // welcome card (markup stays in the DOM, only hidden).
+      const loginCard = document.getElementById('login');
+      const registerCard = document.getElementById('registro');
+      const welcome = document.getElementById('auth-welcome');
+      const heading = document.querySelector('[data-auth-heading]');
+
+      if (loginCard) loginCard.hidden = true;
+      if (registerCard) registerCard.hidden = true;
+      if (heading) heading.hidden = true;
+      if (welcome) welcome.hidden = false;
+
+      // Warm greeting with the first name, built via textContent — the
+      // name is user-controlled and must never touch innerHTML.
+      const name = typeof user.name === 'string' ? user.name.trim() : '';
+      const firstName = name.split(/\s+/)[0] || '';
+      const welcomeText = welcome?.querySelector('[data-welcome-text]');
+
+      if (firstName && welcomeText) {
+        welcomeText.textContent = `Bienvenido de nuevo, ${firstName}: ya tienes una sesión activa; tu panel te espera.`;
+      }
+    }
+
+    // Una cuenta creada desde ESTA página (modal del checkout público) no
+    // recarga la landing: el mismo evento que desbloquea el botón de pago
+    // actualiza la UI de sesión.
+    document.addEventListener('aj:registered', (event) => {
+      const user = event.detail && event.detail.user;
+      if (user) revealSessionUi(user);
+    });
+
+    (async function revealLoggedInState() {
+      const enterPanel = document.getElementById('btn-enter-panel');
+
+      enterPanel?.addEventListener('click', () => {
+        window.location.assign('app.html');
+      });
+
+      try {
+        const fetchMe = () => fetch(window.API('/auth/me'), {
+          credentials: 'include',
+          headers: { 'Accept': 'application/json' },
+        });
+        let response = await fetchMe();
+
+        // The short-lived access token can expire while the refresh cookie
+        // is still valid (30-min access / httpOnly refresh): silently renew
+        // once before giving up, so a logged-in visitor is not mistaken
+        // for anonymous.
+        if (response.status === 401) {
+          const refreshed = await fetch(window.API('/auth/refresh'), {
+            method: 'POST',
+            credentials: 'include',
+            headers: { 'Accept': 'application/json' },
+          });
+          if (refreshed.ok) response = await fetchMe();
+        }
+
+        const data = await response.json().catch(() => ({}));
+
+        // Response shape: { success, data: { user, balance } } — flat
+        // data.user never exists on /auth/me.
+        const user = data && data.success ? data.data && data.data.user : null;
+
+        if (!user) return;
+
+        revealSessionUi(user);
+      } catch (_) {
+        // Network/backend hiccup: keep the visitor landing exactly as it is.
+      }
+    })();
+
+    // ============================== LIGHTBOX ==============================
+    // Click-to-zoom for the section screenshots (9 imgs, cursor-zoom-in).
+    // One shared viewer: backdrop / × / Escape close it, focus is stored
+    // and restored, and body scroll is locked while it is open.
+    (function wireLightbox() {
+      const box = document.getElementById('lightbox');
+
+      if (!box) return;
+
+      const img = box.querySelector('[data-lightbox-img]');
+      const caption = box.querySelector('[data-lightbox-caption]');
+      const close = box.querySelector('[data-lightbox-close]');
+      let lastFocus = null;
+
+      function openLightbox(source) {
+        lastFocus = document.activeElement;
+        img.src = source.currentSrc || source.src;
+        img.alt = source.alt || '';
+        caption.textContent = source.alt || '';
+        box.hidden = false;
+        document.body.style.overflow = 'hidden';
+        close.focus();
+      }
+
+      function closeLightbox() {
+        if (box.hidden) return;
+
+        box.hidden = true;
+        document.body.style.overflow = '';
+        if (lastFocus && lastFocus.isConnected) lastFocus.focus();
+        lastFocus = null;
+      }
+
+      document.querySelectorAll('img.cursor-zoom-in').forEach((el) => {
+        el.addEventListener('click', () => openLightbox(el));
+      });
+
+      box.addEventListener('click', (event) => {
+        if (!(event.target instanceof Element)) return;
+
+        if (event.target.hasAttribute('data-lightbox-backdrop') || event.target.closest('[data-lightbox-close]')) {
+          closeLightbox();
+        }
+      });
+
+      document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') closeLightbox();
+      });
+    })();
+
+    // ============================== CONTACT ==============================
+    // Ported from the main landing's "Contáctanos" section: same POST
+    // /contact contract (honeypot "website" empty, name/email/message).
+    // User input only ever touches the DOM via textContent — never
+    // innerHTML; the status copy stays warm and blame-free.
+    (function wireContactForm() {
+      const form = document.getElementById('contact-form');
+
+      if (!form) return;
+
+      const statusEl = document.getElementById('contact-status');
+      const submit = form.querySelector('#contact-submit');
+      const OK_CLASSES = ['border-emerald-200', 'bg-emerald-50/60', 'text-emerald-900'];
+      // Failure keeps the file's existing rose error palette (amber is not
+      // part of this landing's theme).
+      const FAIL_CLASSES = ['border-rose-200', 'bg-rose-50', 'text-rose-800'];
+      const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      const GENERIC_ERROR = 'No pudimos enviarlo ahora; puedes reintentar en un momento.';
+
+      function setFieldError(input, message) {
+        const box = document.getElementById(input.id + '-error');
+
+        if (!box) return;
+        box.textContent = message;
+        box.classList.remove('hidden');
+      }
+
+      function clearFieldErrors() {
+        form.querySelectorAll('[id$="-error"]').forEach((box) => {
+          box.textContent = '';
+          box.classList.add('hidden');
+        });
+      }
+
+      function showStatus(message, ok) {
+        if (!statusEl) return;
+
+        statusEl.classList.add('hidden');
+        statusEl.classList.remove(...OK_CLASSES, ...FAIL_CLASSES);
+        statusEl.classList.add(...(ok ? OK_CLASSES : FAIL_CLASSES));
+        statusEl.classList.remove('hidden');
+        statusEl.textContent = message;
+      }
+
+      form.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        clearFieldErrors();
+
+        const nameInput = form.querySelector('[name="name"]');
+        const emailInput = form.querySelector('[name="email"]');
+        const messageInput = form.querySelector('[name="message"]');
+        const honeypot = (form.querySelector('[name="website"]')?.value || '').trim();
+        const name = (nameInput?.value || '').trim();
+        const email = (emailInput?.value || '').trim();
+        const message = (messageInput?.value || '').trim();
+
+        if (name === '') {
+          setFieldError(nameInput, 'Escribe tu nombre para saber cómo responderte.');
+          nameInput?.focus();
+          return;
+        }
+
+        if (!EMAIL_RE.test(email)) {
+          setFieldError(emailInput, 'Escribe tu correo para que podamos responderte (ejemplo: nombre@correo.cl).');
+          emailInput?.focus();
+          return;
+        }
+
+        if (message === '') {
+          setFieldError(messageInput, 'Cuéntanos brevemente en qué te podemos ayudar.');
+          messageInput?.focus();
+          return;
+        }
+
+        // Honeypot filled: a bot is in the field. Pretend success and keep
+        // the request — and the table — clean, like the backend does.
+        if (honeypot !== '') {
+          form.reset();
+          showStatus('Gracias. Recibimos tu mensaje; te escribiremos en breve.', true);
+          return;
+        }
+
+        submit.disabled = true;
+        const originalText = submit.textContent;
+        submit.textContent = 'Enviando…';
+
+        try {
+          const response = await fetch(window.API('/contact'), {
+            method: 'POST',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, email, message, website: '' }),
+          });
+          const data = await response.json().catch(() => ({}));
+
+          if (response.ok && data && data.success) {
+            form.reset();
+            showStatus('Gracias. Recibimos tu mensaje; te escribiremos a ' + email + ' en breve.', true);
+          } else {
+            showStatus(GENERIC_ERROR, false);
+          }
+        } catch (_) {
+          showStatus(GENERIC_ERROR, false);
+        } finally {
+          submit.disabled = false;
+          submit.textContent = originalText;
+        }
+      });
+    })();
+  </script>
+
+  <!-- Legal pages as modals: any [data-legal-modal="terminos|privacidad"]
+       trigger opens its panel without navigating away (the register form
+       keeps whatever was typed). Closes on backdrop, X button and Escape;
+       focus returns to the trigger. Without JS the modals simply never
+       open — no dead ends, the panel links stay as plain buttons. -->
+  <script>
+    (function wireLegalModals() {
+      var map = {
+        terminos: 'modal-legal-terminos',
+        privacidad: 'modal-legal-privacidad'
+      };
+      var lastFocus = null;
+
+      function closePanel(panel) {
+        if (!panel) return;
+        panel.hidden = true;
+        document.documentElement.classList.remove('overflow-hidden');
+        if (lastFocus && document.contains(lastFocus)) lastFocus.focus();
+        lastFocus = null;
+      }
+
+      function openPanel(name) {
+        var panel = document.getElementById(map[name] || '');
+        if (!panel) return;
+        lastFocus = document.activeElement;
+        panel.hidden = false;
+        document.documentElement.classList.add('overflow-hidden');
+        var body = panel.querySelector('[data-legal-close]');
+        if (body) body.focus();
+      }
+
+      document.addEventListener('click', function (event) {
+        var trigger = event.target && event.target.closest
+          ? event.target.closest('[data-legal-modal]')
+          : null;
+        if (trigger) {
+          event.preventDefault();
+          openPanel(trigger.getAttribute('data-legal-modal'));
+          return;
+        }
+        var closer = event.target && event.target.closest
+          ? event.target.closest('[data-legal-close]')
+          : null;
+        if (closer) {
+          closePanel(closer.closest('[data-legal-panel]'));
+          return;
+        }
+        var backdrop = event.target && event.target.closest
+          ? event.target.closest('[data-legal-backdrop]')
+          : null;
+        if (backdrop) closePanel(backdrop.closest('[data-legal-panel]'));
+      });
+
+      document.addEventListener('keydown', function (event) {
+        if (event.key !== 'Escape') return;
+        var open = document.querySelectorAll('[data-legal-panel]:not([hidden])');
+        open.forEach(closePanel);
+      });
+    })();
+  </script>
+
+  <!-- Scroll reveal (Cómo funciona + Qué ofrece): arms the staged fade-in
+       and observes the cards of each section. Lives at the end of the body
+       so both sections already exist. Without JS (or with reduced motion)
+       the cards stay fully visible; see the reveal-ready styles in the head. -->
+  <script>
+    (function () {
+      if (!('IntersectionObserver' in window) ||
+          window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+      ['como-funciona', 'que-ofrece'].forEach(function (id) {
+        var section = document.getElementById(id);
+        if (!section) return;
+        var items = section.querySelectorAll('[data-reveal]');
+        if (!items.length) return;
+        section.classList.add('reveal-ready');
+        items.forEach(function (el, i) {
+          el.style.setProperty('--reveal-delay', (i * 120) + 'ms');
+        });
+        var io = new IntersectionObserver(function (entries) {
+          entries.forEach(function (entry) {
+            if (entry.isIntersecting) {
+              entry.target.classList.add('is-visible');
+              io.unobserve(entry.target);
+            }
+          });
+        }, { threshold: 0.2, rootMargin: '0px 0px -40px 0px' });
+        items.forEach(function (el) { io.observe(el); });
+      });
+    })();
+  </script>
+
+</body>
