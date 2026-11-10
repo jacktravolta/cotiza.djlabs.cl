@@ -1,0 +1,45 @@
+/* =============================================================================
+   CotizaIA - pagina publica (Sistema A Rodriguez).
+
+   Detalles que no salen de las utilidades de Tailwind: el aviso de error
+   del formulario y los estados del boton. El resto del diseno viene de
+   css/tokens.css (las mismas variables que el resto de la plataforma).
+   ============================================================================= */
+
+.cotizaia-aviso {
+    margin-top: 1.25rem;
+    border: 1px solid rgb(var(--c-danger-border));
+    border-radius: 0.75rem;
+    background: rgb(var(--c-danger-soft));
+    color: rgb(var(--c-danger-text));
+    padding: 0.875rem 1rem;
+    font-size: 0.925rem;
+    line-height: 1.45;
+}
+
+.cotizaia-aviso.cotizaia-aviso-ok {
+    border-color: rgb(var(--c-success-border));
+    background: rgb(var(--c-success-soft));
+    color: rgb(var(--c-success-text));
+}
+
+/* Aviso que informa sin alarmar: por ejemplo, cuando la revision del
+   proyecto no encontro ningun producto de la lista. */
+.cotizaia-aviso.cotizaia-aviso-info {
+    border-color: rgb(var(--c-info-border));
+    background: rgb(var(--c-info-soft));
+    color: rgb(var(--c-info-text));
+}
+
+/* El textarea crece con el contenido: nunca hay barra horizontal. */
+#consulta {
+    resize: vertical;
+    min-height: 9rem;
+}
+
+/* En pantallas chicas el boton ocupa todo el ancho: el dedo manda. */
+@media (max-width: 30rem) {
+    #cotizaia-enviar {
+        width: 100%;
+    }
+}
